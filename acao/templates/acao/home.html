@@ -1,0 +1,105 @@
+{% extends "acao/_layouts/base.html" %}
+
+{% block scripts %}
+    <style>
+        .chartWithOverlay {
+            position: relative;
+            width: 700px;
+        }
+        .overlay {
+            width: 200px;
+            height: 200px;
+            position: absolute;
+            top: 60px;   /* chartArea top  */
+            left: 180px; /* chartArea left */
+        }
+    </style>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+     
+      function drawChart() {
+        var previsao_teste = ["{{ monte_carlo.previsao_teste|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)];
+        var valor_real = ["{{ monte_carlo.valor_real|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)];
+        var previsao_futura = ["{{ monte_carlo.previsao_futura|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)]
+
+        var error = "{{  monte_carlo.erro|safe }}"
+
+        error = parseFloat(error).toFixed(2)
+
+        console.log(typeof(error));
+       
+        console.log(previsao_futura[0].length)
+
+        //console.log(monte_carlo[0].length)
+        var data = new google.visualization.DataTable();
+        data.addColumn('number', 'Day');
+        data.addColumn('number', 'Valor previsto');
+        data.addColumn('number', 'Valor Real');
+        cont = 1
+        for(var i = 0; i < previsao_teste[0].length; i++){
+                data.addRows([  
+
+            [i+1,  previsao_teste[0][i], valor_real[0][i]]
+            
+            ]);
+            
+        }
+      
+        var options = {
+        title: 'Valor Real | Previsão - Erro médio da previsão: '+ error,
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        explorer: { maxZoomOut: 6 }
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+        chart.draw(data, options);
+      }
+    </script>
+
+{% endblock %}
+
+{% block conteudo %}
+    <div class="row d-flex justify-content-center">
+        <h3 class="display-6">Pesquiar ação na B3 para prever o preço</h3>
+    </div>
+    <div class="row">
+        <div class="col-2"></div>
+
+        <div class="col">
+            <form method="GET" action="{% url 'buscar_acao' %}">
+                {% csrf_token %}
+
+                <div class="form-group" >
+                    <input id="searchHome"  name='busca' type="text" class="form-control form-control-lg" placeholder="Digite o código da ação na B3">
+                </div>
+            
+
+            
+            
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-warning btn-lg">Buscar</button>
+                </div>
+            
+            </form>
+        </div>
+            
+        <div class="col-2"></div>
+        
+    </div>
+
+    <div class="row">
+        {% if monte_carlo %}
+
+            <div id="curve_chart" style="width: 1000px; height: 500px"></div>
+          
+        {% endif %}
+
+    </div>
+{% endblock %} 
