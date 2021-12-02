@@ -19,48 +19,91 @@
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     
     <script type="text/javascript">
-      google.charts.load('current', {'packages':['corechart']});
-      google.charts.setOnLoadCallback(drawChart);
-     
-      function drawChart() {
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(monteCarloReal);
+        google.charts.setOnLoadCallback(monteCarloPrevisao30);
+
         var previsao_teste = ["{{ monte_carlo.previsao_teste|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)];
         var valor_real = ["{{ monte_carlo.valor_real|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)];
         var previsao_futura = ["{{ monte_carlo.previsao_futura|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)]
-
+        let pr = JSON.parse("{{ monte_carlo.previsao_futura|safe }}")
+        console.log(typeof(pr))
         var error = "{{  monte_carlo.erro|safe }}"
 
         error = parseFloat(error).toFixed(2)
 
-        console.log(typeof(error));
-       
-        console.log(previsao_futura[0].length)
+     
+        function monteCarloReal() {
 
-        //console.log(monte_carlo[0].length)
-        var data = new google.visualization.DataTable();
-        data.addColumn('number', 'Day');
-        data.addColumn('number', 'Valor previsto');
-        data.addColumn('number', 'Valor Real');
-        cont = 1
-        for(var i = 0; i < previsao_teste[0].length; i++){
-                data.addRows([  
+            //console.log(monte_carlo[0].length)
+            var data = new google.visualization.DataTable();
+            data.addColumn('number', 'value');
+            data.addColumn('number', 'Valor previsto');
+            data.addColumn('number', 'Valor Real');
+            
+            for(var i = 0; i < previsao_teste[0].length; i++){
+                    data.addRows([  
 
-            [i+1,  previsao_teste[0][i], valor_real[0][i]]
-            
-            ]);
-            
+                [i+1,  previsao_teste[0][i], valor_real[0][i]]
+                
+                ]);
+                
+            }
+        
+            var options = {
+            title: 'Valor Real | Previsão - Erro médio da previsão: '+ error,
+            curveType: 'function',
+            legend: { position: 'bottom' },
+            explorer: { maxZoomOut: 6 },
+            hAxis: {
+                title: 'Dias'
+              },
+            vAxis: {
+                title: 'Valor (R$)'
+              }
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('monte_carlo_real'));
+
+            chart.draw(data, options);
         }
-      
-        var options = {
-        title: 'Valor Real | Previsão - Erro médio da previsão: '+ error,
-        curveType: 'function',
-        legend: { position: 'bottom' },
-        explorer: { maxZoomOut: 6 }
-        };
 
-        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+        function monteCarloPrevisao30() {
 
-        chart.draw(data, options);
-      }
+            //console.log(monte_carlo[0].length)
+            var data = new google.visualization.DataTable();
+            data.addColumn('number', 'value');
+            data.addColumn('number', 'Valor previsto');
+          
+            for(var i = 0; i < 30; i++){
+                    data.addRows([  
+
+                [i+1,  previsao_futura[0][i]]
+                
+                ]);
+                
+            }
+        
+            var options = {
+            title: 'Previsão',
+            curveType: 'function',
+            legend: { position: 'center' },
+            explorer: { maxZoomOut: 6 },
+            width: 1000,
+            height: 400,
+            hAxis: {
+                title: 'Dias'
+              },
+            vAxis: {
+                title: 'Valor (R$)'
+              }
+            };
+
+            var chart30 = new google.visualization.LineChart(document.getElementById('monte_carlo_previsao_30'));
+
+            chart30.draw(data, options);
+        }
+
     </script>
 
 {% endblock %}
@@ -95,11 +138,38 @@
     </div>
 
     <div class="row">
-        {% if monte_carlo %}
 
-            <div id="curve_chart" style="width: 1000px; height: 500px"></div>
-          
-        {% endif %}
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Comparação de preço</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Previsão para 30 dias</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">60</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="home" role="tabpanel" >
+                {% if monte_carlo %}
+                    <div id="monte_carlo_real" style="width: 1000px; height: 500px"></div>
+
+                {% endif %}
+            </div>
+            <div class="tab-pane fade" id="profile" role="tabpanel">
+                {% if monte_carlo %}
+                    <div id="monte_carlo_previsao_30" style="width: 1000px; height: 500px;"></div>
+
+                {% endif %}
+            </div>
+            <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">...</div>
+        </div>
+
 
     </div>
+
+    
+
 {% endblock %} 
