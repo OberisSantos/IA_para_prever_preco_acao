@@ -22,88 +22,120 @@
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(monteCarloReal);
         google.charts.setOnLoadCallback(monteCarloPrevisao30);
-        google.charts.setOnLoadCallback(monteCarloPrevisao60);
-        google.charts.setOnLoadCallback(monteCarloPrevisao90);
+        //google.charts.setOnLoadCallback(monteCarloPrevisao60);
+        //google.charts.setOnLoadCallback(monteCarloPrevisao90);
 
-        var previsao_teste = ["{{ monte_carlo.previsao_teste|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)];
-        var valor_real = ["{{ monte_carlo.valor_real|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)];
-        var previsao_futura = ["{{ monte_carlo.previsao_futura|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)]
-        let pr = JSON.parse("{{ monte_carlo.previsao_futura|safe }}")
-        console.log(typeof(pr))
-        var error = "{{  monte_carlo.erro|safe }}"
-
-        error = parseFloat(error).toFixed(2)
-
-     
-        function monteCarloReal() {
-
-            //console.log(monte_carlo[0].length)
-            var data = new google.visualization.DataTable();
-            data.addColumn('number', 'value');
-            data.addColumn('number', 'Valor previsto');
-            data.addColumn('number', 'Valor Real');
-            
-            for(var i = 0; i < previsao_teste[0].length; i++){
-                    data.addRows([  
-
-                [i+1,  previsao_teste[0][i], valor_real[0][i]]
-                
-                ]);
-                
-            }
+        var previsao_futura = []
+        previsao_futura.push(["{{ monte_carlo.1.previsao_futura|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)])
+        previsao_futura.push(["{{ monte_carlo.3.previsao_futura|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)])
         
-            var options = {
-            title: 'Valor Real | Previsão - Erro médio da previsão: '+ error,
-            curveType: 'function',
-            legend: { position: 'bottom' },
-            explorer: { maxZoomOut: 6 },
-            hAxis: {
-                title: 'Dias'
-              },
-            vAxis: {
-                title: 'Valor (R$)'
-              }
-            };
+        
+        var previsao_teste = []
+        previsao_teste.push(["{{ monte_carlo.1.previsao_teste|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)]);
+        previsao_teste.push(["{{ monte_carlo.3.previsao_teste|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)]);
+        
+        var valor_real = []
+        valor_real.push(["{{ monte_carlo.1.valor_real|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)]);
+        valor_real.push(["{{ monte_carlo.3.valor_real|safe }}".replace('[', '' ).replace(']', '', ).split(',').map(Number)]);
+        
 
-            var chart = new google.visualization.LineChart(document.getElementById('monte_carlo_real'));
+        var error = []
+        error.push("{{  monte_carlo.1.erro|safe }}");
+        error.push("{{  monte_carlo.3.erro|safe }}");
 
-            chart.draw(data, options);
+        //error = parseFloat(error).toFixed(2)
+        indice_1 = "{{ monte_carlo.0|safe }}"
+        indice_2 = "{{ monte_carlo.2|safe }}"
+        console.log(indice_2)
+
+        function monteCarloReal() {
+           
+            //console.log(monte_carlo[0].length)
+            var id = ['monte_carlo_real_1', 'monte_carlo_real_2'];
+            for(var i = 0; i < 2; i++){
+
+                var v_real = valor_real[i][0]
+                var p_teste = previsao_teste[i][0]
+
+                var data = new google.visualization.DataTable();
+                data.addColumn('number', 'value');
+                data.addColumn('number', 'Valor previsto');
+                data.addColumn('number', 'Valor Real');
+                
+                for(var x = 0; x < p_teste.length; x++){
+                        data.addRows([  
+
+                    [x+1,  p_teste[x], v_real[x]]
+                    
+                    ]);
+                    
+                }
+            
+                var options = {
+                title: 'Valor Real | Previsão - Erro médio da previsão: '+ error[i],
+                curveType: 'function',
+                legend: { position: 'bottom' },
+                explorer: { maxZoomOut: 6 },
+                hAxis: {
+                    title: 'Dias'
+                    },
+                vAxis: {
+                    title: 'Valor (R$)'
+                    }
+                };
+
+                var chart = new google.visualization.LineChart(document.getElementById(id[i]));
+
+                chart.draw(data, options);
+                console.log(id[i])
+
+            }
+            
+            
         }
 
         function monteCarloPrevisao30() {
+            var id = ['mc_prev_30_1', 'mc_prev_30_2'];
 
-            //console.log(monte_carlo[0].length)
-            var data = new google.visualization.DataTable();
-            data.addColumn('number', 'value');
-            data.addColumn('number', 'Valor previsto');
-          
-            for(var i = 0; i < 30; i++){
-                    data.addRows([  
+            for(var i = 0; i < 2; i++){
 
-                [i+1,  previsao_futura[0][i]]
                 
-                ]);
+                var p_futura = previsao_futura[i][0]
+
+                var data = new google.visualization.DataTable();
+                data.addColumn('number', 'value');
+                data.addColumn('number', 'Valor previsto');
+              
+                for(var x = 0; x < 30; x++){
+                        data.addRows([  
+    
+                    [x+1,  p_futura[x]]
+                    
+                    ]);
+                    
+                }
+            
+                var options = {
+                title: 'Previsão',
+                curveType: 'function',
+                legend: { position: 'center' },
+                explorer: { maxZoomOut: 6 },
+                width: 1000,
+                height: 400,
+                hAxis: {
+                    title: 'Dias'
+                  },
+                vAxis: {
+                    title: 'Valor (R$)'
+                  }
+                };
+    
+                var chart30 = new google.visualization.LineChart(document.getElementById(id[i]));
+    
+                chart30.draw(data, options);
                 
             }
-        
-            var options = {
-            title: 'Previsão',
-            curveType: 'function',
-            legend: { position: 'center' },
-            explorer: { maxZoomOut: 6 },
-            width: 1000,
-            height: 400,
-            hAxis: {
-                title: 'Dias'
-              },
-            vAxis: {
-                title: 'Valor (R$)'
-              }
-            };
 
-            var chart30 = new google.visualization.LineChart(document.getElementById('monte_carlo_previsao_30'));
-
-            chart30.draw(data, options);
         }
 
         function monteCarloPrevisao60() {
@@ -190,16 +222,17 @@
         <div class="col-2"></div>
 
         <div class="col">
-            <form method="GET" action="{% url 'buscar_acao' %}">
+            <form method="GET" action="{% url 'get_acao_array' %}">
                 {% csrf_token %}
 
                 <div class="form-group" >
-                    <input id="searchHome"  name='busca' type="text" class="form-control form-control-lg" placeholder="Ex.: BOVA11.SA">
+                    <input id="searchHome"  name='indice1' type="text" class="form-control form-control-lg" placeholder="Ex.: BOVA11.SA">
                 </div>
-            
 
-            
-            
+                <div class="form-group" >
+                    <input id="searchHome"  name='indice2' type="text" class="form-control form-control-lg" placeholder="Ex.: BOVA11.SA">
+                </div>
+
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <button type="submit" class="btn btn-warning btn-lg">Buscar</button>
                 </div>
@@ -233,11 +266,12 @@
             <div class="tab-content" id="myTabContent">
                 <div class="tab-pane fade show active" id="real" role="tabpanel" >
                     
-                    <div id="monte_carlo_real" style="width: 1000px; height: 500px"></div>
-
+                    <div id="monte_carlo_real_1" style="width: 1000px; height: 500px"></div>
+                    <div id="monte_carlo_real_2" style="width: 1000px; height: 500px"></div>
                 </div>
                 <div class="tab-pane fade" id="dias30" role="tabpanel">
-                    <div id="monte_carlo_previsao_30" style="width: 1000px; height: 500px;"></div>
+                    <div id="mc_prev_30_1" style="width: 1000px; height: 500px;"></div>
+                    <div id="mc_prev_30_2" style="width: 1000px; height: 500px;"></div>
 
                 </div>
                 <div class="tab-pane fade" id="dias60" role="tabpanel" aria-labelledby="contact-tab">           

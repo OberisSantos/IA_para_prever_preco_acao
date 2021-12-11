@@ -2,6 +2,9 @@ from django.shortcuts import render
 import pandas as pd
 import numpy as np
 
+import json
+from django.http import JsonResponse
+
 import yfinance as yf
 import pandas_datareader as pdr
 
@@ -38,8 +41,22 @@ def buscar_acao(request):
     #acaodf.reset_index('Date', inplace=True)
     
     monte_carlo = previsao_monte_carlo(acao)
+    monte_carlo_real = monte_carlo['valor_real']
+    #real = json.dumps(monte_carlo_real)
+
+    monte_carlo = json.dumps(monte_carlo)
     
-    return render(request, 'acao/home.html', {'monte_carlo': monte_carlo})
+    #return render(request, 'acao/teste.html', {'monte_carlo': monte_carlo})
+   
+    return render(request, 'acao/teste.html', context={"mcprev_json":json.dumps(monte_carlo)}) #usar esse modelo
+    #return render(request, 'acao/teste.html', context={"mydata_json":json.dumps(real)}) #usar esse modelo
+    #return JsonResponse(request, real)
+
+def buscar__acao(request):
+    mydata = {'age':12}
+    return render(request, 'acao/teste.html', context={"mydata_json": json.dumps(mydata)})
+
+
 
 
 def previsao_monte_carlo(dataset):
@@ -47,7 +64,7 @@ def previsao_monte_carlo(dataset):
     #dataset = dataset.to_list() #converter para lista
     #dataset = pd.DataFrame(dataset)
     dias_a_frente = 90
-    simulacoes = 50  
+    simulacoes = 1000
 
     dataset_normalizado = dataset.copy()
     #print(dataset.iloc[0][1])
@@ -128,3 +145,37 @@ def previsao_monte_carlo(dataset):
     }
     
     return dados
+
+def get_acao_array(request):
+    yf.pdr_override()
+
+    array_acao = []
+    array_acao.append(request.GET.get('indice1', False))
+    array_acao.append(request.GET.get('indice2', False))
+
+    if array_acao[0] != False and array_acao[1] != False:  
+        acoes = pd.DataFrame()
+        for acao in array_acao:
+            acoes[acao] = pdr.get_data_yahoo(acao, start = '2015-01-01')['Close']
+
+        acoes.dropna(inplace=True) #remover
+        
+        monte_carlo = []
+
+        for indice in array_acao:
+            acao = acoes.rename(columns={indice: 'Close'}) #remover
+            #acao.set_index('Date', inplace=True)
+            monte_carlo.append(indice)
+            monte_carlo.append(previsao_monte_carlo(acao))
+
+        return render(request, 'acao/get_acao_array.html', {'monte_carlo': monte_carlo})
+   
+        
+    #if(indice1 in request.GET and indice2 in request.GET):
+        
+        #array = [request.GET.get('indice1', False) and request.GET.get('indice2', False)]
+        #print('aqui')
+    
+    
+
+    return render(request, 'acao/get_acao_array.html', {})

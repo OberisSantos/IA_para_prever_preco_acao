@@ -19,4 +19,7 @@ from . import views
 urlpatterns = [
     path('', views.home, name = 'home'),
     path('buscar/acao', views.buscar_acao, name='buscar_acao'),
+    path('buscar/acao/array', views.get_acao_array, name='get_acao_array'),
+    
+
 ]
